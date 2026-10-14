@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Tarefas</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gerenciamento de Tarefas</h1>
+        <nav>
+            <a href="#" id="nav-usuarios">Cadastro de Usuários</a>
+            <a href="#" id="nav-tarefas">Cadastro de Tarefas</a>
+            <a href="#" id="nav-gerenciar">Gerenciar Tarefas</a>
+        </nav>
+    </header>
+    
+    <main>
+        <!-- Seção de Cadastro de Usuários -->
+        <section id="section-usuarios">
+            <h2>Cadastro de Usuários</h2>
+            <div id="mensagem-usuario" class="message hidden"></div>
+            <form id="form-usuario">
+                <div class="form-group">
+                    <label for="nome">Nome:</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha:</label>
+                    <input type="password" id="senha" name="senha" required>
+                </div>
+                <button type="submit">Cadastrar</button>
+            </form>
+            
+            <h3>Usuários Cadastrados</h3>
+            <table id="tabela-usuarios">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão inseridos aqui via JavaScript -->
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Seção de Cadastro de Tarefas -->
+        <section id="section-tarefas" class="hidden">
+            <h2>Cadastro de Tarefas</h2>
+            <div id="mensagem-tarefa" class="message hidden"></div>
+            <form id="form-tarefa">
+                <div class="form-group">
+                    <label for="titulo">Título:</label>
+                    <input type="text" id="titulo" name="titulo" required>
+                </div>
+                <div class="form-group">
+                    <label for="descricao">Descrição:</label>
+                    <textarea id="descricao" name="descricao" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="responsavel">Responsável:</label>
+                    <select id="responsavel" name="responsavel" required>
+                        <option value="">Selecione um usuário</option>
+                        <!-- Opções serão inseridas via JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status" required>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Concluída">Concluída</option>
+                    </select>
+                </div>
+                <button type="submit">Cadastrar</button>
+            </form>
+            
+            <h3>Tarefas Cadastradas</h3>
+            <table id="tabela-tarefas">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Responsável</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão inseridos aqui via JavaScript -->
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Seção de Gerenciamento de Tarefas -->
+        <section id="section-gerenciar" class="hidden">
+            <h2>Gerenciar Tarefas</h2>
+            <div class="form-group">
+                <label for="filtro-usuario">Filtrar por usuário:</label>
+                <select id="filtro-usuario">
+                    <option value="">Todos os usuários</option>
+                    <!-- Opções serão inseridas via JavaScript -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filtro-status">Filtrar por status:</label>
+                <select id="filtro-status">
+                    <option value="">Todos os status</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Concluída">Concluída</option>
+                </select>
+            </div>
+            <button id="btn-filtrar">Filtrar</button>
+            
+            <h3>Tarefas</h3>
+            <table id="tabela-gerenciar">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Descrição</th>
+                        <th>Responsável</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão inseridos aqui via JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    
+    <script>
+        // Variáveis para controle de navegação
+        const API_BASE_URL = 'http://localhost:3007/api'; // Adicionar esta constante para definir a URL base da API
+
+        const navUsuarios = document.getElementById('nav-usuarios');
+        const navTarefas = document.getElementById('nav-tarefas');
+        const navGerenciar = document.getElementById('nav-gerenciar');
+        
+        const sectionUsuarios = document.getElementById('section-usuarios');
+        const sectionTarefas = document.getElementById('section-tarefas');
+        const sectionGerenciar = document.getElementById('section-gerenciar');
+        
+        // Funções para mostrar e esconder seções
+        function mostrarSecao(secao) {
+            sectionUsuarios.classList.add('hidden');
+            sectionTarefas.classList.add('hidden');
+            sectionGerenciar.classList.add('hidden');
+            
+            secao.classList.remove('hidden');
+        }
+        
+        // Event listeners para navegação
+        navUsuarios.addEventListener('click', (e) => {
+            e.preventDefault();
+            mostrarSecao(sectionUsuarios);
+            carregarUsuarios();
+        });
+        
+        navTarefas.addEventListener('click', (e) => {
+            e.preventDefault();
+            mostrarSecao(sectionTarefas);
+            carregarUsuariosSelect();
+            carregarTarefas();
+        });
+        
+        navGerenciar.addEventListener('click', (e) => {
+            e.preventDefault();
+            mostrarSecao(sectionGerenciar);
+            carregarUsuariosSelect();
+            carregarTarefasGerenciar();
+        });
+        
+        // Função para exibir mensagens
+        function exibirMensagem(elemento, tipo, texto) {
+            elemento.textContent = texto;
+            elemento.className = `message ${tipo}`;
+            elemento.classList.remove('hidden');
+            
+            setTimeout(() => {
+                elemento.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Formulário de cadastro de usuários
+        const formUsuario = document.getElementById('form-usuario');
+        const mensagemUsuario = document.getElementById('mensagem-usuario');
+        
+        formUsuario.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios`, { // Usar a URL base
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nome, email, senha })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    exibirMensagem(mensagemUsuario, 'success', 'Usuário cadastrado com sucesso!');
+                    formUsuario.reset();
+                    carregarUsuarios();
+                } else {
+                    exibirMensagem(mensagemUsuario, 'error', data.mensagem || 'Erro ao cadastrar usuário.');
+                }
+            } catch (error) {
+                exibirMensagem(mensagemUsuario, 'error', 'Erro de conexão com o servidor.');
+            }
+        });
+        
+        // Carregar lista de usuários
+        async function carregarUsuarios() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios`); // Usar a URL base
+                const usuarios = await response.json();
+                
+                const tbody = document.querySelector('#tabela-usuarios tbody');
+                tbody.innerHTML = '';
+                
+                usuarios.forEach(usuario => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${usuario.id}</td>
+                        <td>${usuario.nome}</td>
+                        <td>${usuario.email}</td>
+                        <td>
+                            <button class="btn-editar-usuario" data-id="${usuario.id}">Editar</button>
+                            <button class="btn-excluir-usuario" data-id="${usuario.id}">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Adicionar event listeners para os botões de editar e excluir
+                document.querySelectorAll('.btn-excluir-usuario').forEach(btn => {
+                    btn.addEventListener('click', excluirUsuario);
+                });
+                
+                document.querySelectorAll('.btn-editar-usuario').forEach(btn => {
+                    btn.addEventListener('click', prepararEdicaoUsuario);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+            }
+        }
+        
+        // Carregar usuários para os selects
+        async function carregarUsuariosSelect() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios`); // Usar a URL base
+                const usuarios = await response.json();
+                
+                const selectResponsavel = document.getElementById('responsavel');
+                const filtroUsuario = document.getElementById('filtro-usuario');
+                
+                // Limpar opções anteriores, exceto a primeira
+                while (selectResponsavel.options.length > 1) {
+                    selectResponsavel.remove(1);
+                }
+                
+                while (filtroUsuario.options.length > 1) {
+                    filtroUsuario.remove(1);
+                }
+                
+                // Adicionar novas opções
+                usuarios.forEach(usuario => {
+                    const option1 = document.createElement('option');
+                    option1.value = usuario.id;
+                    option1.textContent = usuario.nome;
+                    selectResponsavel.appendChild(option1);
+                    
+                    const option2 = document.createElement('option');
+                    option2.value = usuario.id;
+                    option2.textContent = usuario.nome;
+                    filtroUsuario.appendChild(option2);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar usuários para selects:', error);
+            }
+        }
+        
+        // Excluir usuário
+        async function excluirUsuario(e) {
+            const id = e.target.getAttribute('data-id');
+            
+            if (confirm('Tem certeza que deseja excluir este usuário?')) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, { // Usar a URL base
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        exibirMensagem(mensagemUsuario, 'success', 'Usuário excluído com sucesso!');
+                        carregarUsuarios();
+                    } else {
+                        const data = await response.json();
+                        exibirMensagem(mensagemUsuario, 'error', data.mensagem || 'Erro ao excluir usuário.');
+                    }
+                } catch (error) {
+                    exibirMensagem(mensagemUsuario, 'error', 'Erro de conexão com o servidor.');
+                }
+            }
+        }
+        
+        // Preparar edição de usuário
+        async function prepararEdicaoUsuario(e) {
+            const id = e.target.getAttribute('data-id');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios/${id}`); // Usar a URL base
+                const usuario = await response.json();
+                
+                document.getElementById('nome').value = usuario.nome;
+                document.getElementById('email').value = usuario.email;
+                
+                // Alterar o comportamento do formulário para atualizar em vez de criar
+                formUsuario.removeEventListener('submit', formUsuario.onsubmit);
+                formUsuario.onsubmit = async (e) => {
+                    e.preventDefault();
+                    
+                    const nome = document.getElementById('nome').value;
+                    const email = document.getElementById('email').value;
+                    const senha = document.getElementById('senha').value;
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, { // Usar a URL base
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ nome, email, senha })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            exibirMensagem(mensagemUsuario, 'success', 'Usuário atualizado com sucesso!');
+                            formUsuario.reset();
+                            carregarUsuarios();
+                            
+                            // Restaurar o comportamento original do formulário
+                            formUsuario.removeEventListener('submit', formUsuario.onsubmit);
+                            formUsuario.addEventListener('submit', formUsuario.onsubmit);
+                        } else {
+                            exibirMensagem(mensagemUsuario, 'error', data.mensagem || 'Erro ao atualizar usuário.');
+                        }
+                    } catch (error) {
+                        exibirMensagem(mensagemUsuario, 'error', 'Erro de conexão com o servidor.');
+                    }
+                };
+            } catch (error) {
+                console.error('Erro ao buscar usuário para edição:', error);
+            }
+        }
+        
+        // Formulário de cadastro de tarefas
+        const formTarefa = document.getElementById('form-tarefa');
+        const mensagemTarefa = document.getElementById('mensagem-tarefa');
+        
+        formTarefa.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const titulo = document.getElementById('titulo').value;
+            const descricao = document.getElementById('descricao').value;
+            const usuario_id = document.getElementById('responsavel').value;
+            const status = document.getElementById('status').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas`, { // Usar a URL base
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ titulo, descricao, usuario_id, status })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    exibirMensagem(mensagemTarefa, 'success', 'Tarefa cadastrada com sucesso!');
+                    formTarefa.reset();
+                    carregarTarefas();
+                } else {
+                    exibirMensagem(mensagemTarefa, 'error', data.mensagem || 'Erro ao cadastrar tarefa.');
+                }
+            } catch (error) {
+                exibirMensagem(mensagemTarefa, 'error', 'Erro de conexão com o servidor.');
+            }
+        });
+        
+        // Carregar lista de tarefas
+        async function carregarTarefas() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas`); // Usar a URL base
+                const tarefas = await response.json();
+                
+                const tbody = document.querySelector('#tabela-tarefas tbody');
+                tbody.innerHTML = '';
+                
+                tarefas.forEach(tarefa => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${tarefa.id}</td>
+                        <td>${tarefa.titulo}</td>
+                        <td>${tarefa.usuario_nome}</td>
+                        <td>${tarefa.status}</td>
+                        <td>
+                            <button class="btn-editar-tarefa" data-id="${tarefa.id}">Editar</button>
+                            <button class="btn-excluir-tarefa" data-id="${tarefa.id}">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Adicionar event listeners para os botões de editar e excluir
+                document.querySelectorAll('.btn-excluir-tarefa').forEach(btn => {
+                    btn.addEventListener('click', excluirTarefa);
+                });
+                
+                document.querySelectorAll('.btn-editar-tarefa').forEach(btn => {
+                    btn.addEventListener('click', prepararEdicaoTarefa);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar tarefas:', error);
+            }
+        }
+        
+        // Carregar tarefas para gerenciamento
+        async function carregarTarefasGerenciar() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas`); // Usar a URL base
+                const tarefas = await response.json();
+                
+                const tbody = document.querySelector('#tabela-gerenciar tbody');
+                tbody.innerHTML = '';
+                
+                tarefas.forEach(tarefa => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${tarefa.id}</td>
+                        <td>${tarefa.titulo}</td>
+                        <td>${tarefa.descricao}</td>
+                        <td>${tarefa.usuario_nome}</td>
+                        <td>
+                            <select class="select-status" data-id="${tarefa.id}">
+                                <option value="Pendente" ${tarefa.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                                <option value="Em andamento" ${tarefa.status === 'Em andamento' ? 'selected' : ''}>Em andamento</option>
+                                <option value="Concluída" ${tarefa.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn-excluir-tarefa" data-id="${tarefa.id}">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Adicionar event listeners para os selects de status
+                document.querySelectorAll('.select-status').forEach(select => {
+                    select.addEventListener('change', atualizarStatusTarefa);
+                });
+                
+                // Adicionar event listeners para os botões de excluir
+                document.querySelectorAll('.btn-excluir-tarefa').forEach(btn => {
+                    btn.addEventListener('click', excluirTarefa);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar tarefas para gerenciamento:', error);
+            }
+        }
+        
+        // Excluir tarefa
+        async function excluirTarefa(e) {
+            const id = e.target.getAttribute('data-id');
+            
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/tarefas/${id}`, { // Usar a URL base
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        exibirMensagem(mensagemTarefa, 'success', 'Tarefa excluída com sucesso!');
+                        carregarTarefas();
+                        carregarTarefasGerenciar();
+                    } else {
+                        const data = await response.json();
+                        exibirMensagem(mensagemTarefa, 'error', data.mensagem || 'Erro ao excluir tarefa.');
+                    }
+                } catch (error) {
+                    exibirMensagem(mensagemTarefa, 'error', 'Erro de conexão com o servidor.');
+                }
+            }
+        }
+        
+        // Preparar edição de tarefa
+        async function prepararEdicaoTarefa(e) {
+            const id = e.target.getAttribute('data-id');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas/${id}`); // Usar a URL base
+                const tarefa = await response.json();
+                
+                document.getElementById('titulo').value = tarefa.titulo;
+                document.getElementById('descricao').value = tarefa.descricao;
+                document.getElementById('responsavel').value = tarefa.usuario_id;
+                document.getElementById('status').value = tarefa.status;
+                
+                // Alterar o comportamento do formulário para atualizar em vez de criar
+                formTarefa.removeEventListener('submit', formTarefa.onsubmit);
+                formTarefa.onsubmit = async (e) => {
+                    e.preventDefault();
+                    
+                    const titulo = document.getElementById('titulo').value;
+                    const descricao = document.getElementById('descricao').value;
+                    const usuario_id = document.getElementById('responsavel').value;
+                    const status = document.getElementById('status').value;
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/tarefas/${id}`, { // Usar a URL base
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ titulo, descricao, usuario_id, status })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            exibirMensagem(mensagemTarefa, 'success', 'Tarefa atualizada com sucesso!');
+                            formTarefa.reset();
+                            carregarTarefas();
+                            
+                            // Restaurar o comportamento original do formulário
+                            formTarefa.removeEventListener('submit', formTarefa.onsubmit);
+                            formTarefa.addEventListener('submit', formTarefa.onsubmit);
+                        } else {
+                            exibirMensagem(mensagemTarefa, 'error', data.mensagem || 'Erro ao atualizar tarefa.');
+                        }
+                    } catch (error) {
+                        exibirMensagem(mensagemTarefa, 'error', 'Erro de conexão com o servidor.');
+                    }
+                };
+            } catch (error) {
+                console.error('Erro ao buscar tarefa para edição:', error);
+            }
+        }
+        
+        // Atualizar status da tarefa
+        async function atualizarStatusTarefa(e) {
+            const id = e.target.getAttribute('data-id');
+            const status = e.target.value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas/${id}/status`, { // Usar a URL base
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+                
+                if (response.ok) {
+                    // Atualizar a lista de tarefas
+                    carregarTarefas();
+                    carregarTarefasGerenciar();
+                } else {
+                    const data = await response.json();
+                    alert(data.mensagem || 'Erro ao atualizar status da tarefa.');
+                }
+            } catch (error) {
+                alert('Erro de conexão com o servidor.');
+            }
+        }
+        
+        // Filtrar tarefas
+        document.getElementById('btn-filtrar').addEventListener('click', async () => {
+            const usuario_id = document.getElementById('filtro-usuario').value;
+            const status = document.getElementById('filtro-status').value;
+            
+            let url = `${API_BASE_URL}/tarefas`; // Usar a URL base
+            
+            // Adicionar parâmetros de consulta se estiverem presentes
+            if (usuario_id || status) {
+                url += '?';
+                
+                if (usuario_id) {
+                    url += `usuario_id=${usuario_id}`;
+                }
+                
+                if (status) {
+                    if (usuario_id) {
+                        url += '&';
+                    }
+                    url += `status=${encodeURIComponent(status)}`;
+                }
+            }
+            
+            try {
+                const response = await fetch(url);
+                const tarefas = await response.json();
+                
+                const tbody = document.querySelector('#tabela-gerenciar tbody');
+                tbody.innerHTML = '';
+                
+                tarefas.forEach(tarefa => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${tarefa.id}</td>
+                        <td>${tarefa.titulo}</td>
+                        <td>${tarefa.descricao}</td>
+                        <td>${tarefa.usuario_nome}</td>
+                        <td>
+                            <select class="select-status" data-id="${tarefa.id}">
+                                <option value="Pendente" ${tarefa.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                                <option value="Em andamento" ${tarefa.status === 'Em andamento' ? 'selected' : ''}>Em andamento</option>
+                                <option value="Concluída" ${tarefa.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn-excluir-tarefa" data-id="${tarefa.id}">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Adicionar event listeners para os selects de status
+                document.querySelectorAll('.select-status').forEach(select => {
+                    select.addEventListener('change', atualizarStatusTarefa);
+                });
+                
+                // Adicionar event listeners para os botões de excluir
+                document.querySelectorAll('.btn-excluir-tarefa').forEach(btn => {
+                    btn.addEventListener('click', excluirTarefa);
+                });
+            } catch (error) {
+                console.error('Erro ao filtrar tarefas:', error);
+            }
+        });
+        
+        // Inicializar a página carregando os usuários
+        carregarUsuarios();
+    </script>
+</body>
+</html>
