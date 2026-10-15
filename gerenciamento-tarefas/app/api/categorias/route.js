@@ -15,17 +15,26 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const { nome, descricao } = await request.json();
-    if (!nome?.trim()) {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ mensagem: 'Corpo da requisição JSON inválido' }, { status: 400 });
+    }
+
+    const nome = typeof body?.nome === 'string' ? body.nome.trim() : '';
+    const descricao = typeof body?.descricao === 'string' ? body.descricao.trim() : '';
+
+    if (!nome) {
       return NextResponse.json({ mensagem: 'Nome da categoria é obrigatório' }, { status: 400 });
     }
 
     const [result] = await pool.query(
       'INSERT INTO categorias (nome, descricao) VALUES (?, ?)',
-      [nome.trim(), descricao?.trim() || null]
+      [nome, descricao || null]
     );
     return NextResponse.json(
-      { id: result.insertId, nome: nome.trim(), descricao: descricao?.trim() || null },
+      { id: result.insertId, nome, descricao: descricao || null },
       { status: 201 }
     );
   } catch (error) {

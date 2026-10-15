@@ -108,6 +108,10 @@ router.put('/:id', async (req, res) => {
       values.push(hashedSenha);
     }
     
+    if (values.length === 0) {
+      return res.status(400).json({ mensagem: 'Informe ao menos um campo para atualizar' });
+    }
+
     // Remover a última vírgula e espaço
     query = query.slice(0, -2);
     

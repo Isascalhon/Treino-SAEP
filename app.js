@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 3007;
 app.use(cors()); // Adicionar o middleware CORS
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.get('/style.css', (req, res) => {
+  res.sendFile(path.join(__dirname, 'style.css'));
+});
 
 // Rotas API
 app.use('/api/usuarios', usuariosRouter);
@@ -21,7 +23,7 @@ app.use('/api/tarefas', tarefasRouter);
 
 // Rota para a página inicial
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Iniciar o servidor
